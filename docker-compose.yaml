@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cb_service
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  nats:
+    image: nats:2.10
+    restart: unless-stopped
+    ports:
+      - "4222:4222"
+
+  cb_service:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./app:/app/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_started
+      nats:
+        condition: service_started
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  nats_checker:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./nats_checker:/app/nats_checker
+    depends_on:
+      cb_service:
+        condition: service_started
+    command: python -m nats_checker.main
+
+volumes:
+  pgdata:

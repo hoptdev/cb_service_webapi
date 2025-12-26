@@ -1,0 +1,9 @@
+fastapi[all]
+uvicorn
+sqlalchemy
+asyncpg
+aiosqlite
+httpx
+apscheduler
+pydantic
+nats-py
